@@ -1,0 +1,44 @@
+{
+  "schema": "kitforge.build_recipe.v1",
+  "slug": "frappecrm",
+  "image": "readystack/frappecrm:v1.90.0-CE-ubuntu24.04-r5",
+  "build_method": "source-rebuild-python",
+  "source": {
+    "repo": "https://github.com/frappe/crm",
+    "ref": "v1.90.0",
+    "framework_repo": "https://github.com/frappe/frappe",
+    "framework_branch": "v16.53.0",
+    "_source_note": "AGPL-3.0 CRM app on the MIT Frappe framework (version-16). Built via frappe_docker's bench toolchain (bench init frappe + bench get-app crm + bench build). NOT a plain pip build \u2014 the hand-kit forks frappe_docker's production Containerfile.",
+    "source_date_epoch": 1795408354,
+    "source_date_epoch_provenance": "the time release v1.90.0-CE-ubuntu24.04-r5 was cut (2026-11-23T04:32:34Z), by scripts/rerelease-agenda.py: ReadyStack dates an image by when its release was packaged (owner 2026-11-10), recorded here once and used by every rebuild of the release; it builds upstream commit 36bd8859f2a6, dated 2026-10-29T15:58:12Z (source.commit_epoch).",
+    "commit": "36bd8859f2a6345a620477bc708d0546e8c3f08a",
+    "python_version": "3.14",
+    "python_runtime": {
+      "provider": "ubuntu-source",
+      "version": "3.14.10",
+      "sha256": "de414a57119abef52784d8993e341d53aed635fc2b05c2607d9f98a2c5b72032",
+      "_note": "CPython 3.14.10 compiled from python.org's release tarball (sha256 from python.org's release API, scripts/cpython-pin.py) plus upstream's own fix commit 7d9da92 for CVE-2026-119170 (gh-160923, PR #160984, on CPython's 3.14 branch since 2026-11-06; a hashlib regression in 3.14.10 only, under an OpenSSL in FIPS mode; python.org has not yet released a 3.14.11), applied unmodified with `patch -p1` to the extracted source before configure (python_runtime.patches; the hand kit's vendor stage fetches the patch file, pinned by sha256, it ships in vendored/frappecrm-src/python/ beside the tarball, and the offline build checks and applies it again, so a customer's rebuild carries it; drop the patch when the pin moves to a release that contains it), against Ubuntu 24.04's own libraries -- libssl3t64, libsqlite3-0, zlib1g, libexpat1, libffi8, liblzma5, libbz2-1.0, libuuid1, libzstd1, libncursesw6, libreadline8t64 -- which Ubuntu's security team maintains, the scan sees as debs, and apt upgrades fix (owner decision 2026-10-10, after python-build-standalone 20261009 was found to bundle SQLite 3.53.1 with two HIGH CVEs fixed upstream four months earlier). The vendor stage only fetches the tarball and the build toolchain's debs; the compile runs in the offline (--network=none) build, reproducibly (gen_dockerfile.cpython_build_cmd: SOURCE_DATE_EPOCH, no PGO/LTO, fixed --build triple and source path, stripped, checked-hash .pyc). Never built: _dbm, _gdbm, _tkinter (no Berkeley DB, GDBM or Tk); no test suite, idle, tkinter, turtledemo or static libpython in the image. mpdecimal is the copy in CPython's own source (noble has no libmpdec). Move the pin with scripts/cpython-pin.py --write for each CPython patch release.",
+      "patches": [
+        {
+          "name": "cpython-3.14.10-7d9da92-fips-hashlib.diff",
+          "url": "https://github.com/python/cpython/commit/7d9da9208fc3dc126bebca6844dfe312afc43c34.diff",
+          "sha256": "125404bb224770a1f9120b88075b252b0536e9bc348c89a3e7fb9dd19868ed7d",
+          "commit": "7d9da9208fc3dc126bebca6844dfe312afc43c34",
+          "python_version": "3.14.10",
+          "why": "CVE-2026-119170 is a hashlib FIPS-property regression in CPython 3.14.10 only; python.org has released no 3.14.11, so the fix is taken as upstream's own commit 7d9da92 from the 3.14 branch (gh-160923 / PR #160984, 2026-11-06), applied unmodified before configure. Owner policy 2026-11-17: apply upstream's exact fix commit ourselves rather than wait, and never hand-write a fix. The sha256 is of the commit's .diff as GitHub serves it (read 2026-11-17 for homeassistant; downloaded again and re-hashed 2026-11-23)."
+        }
+      ]
+    },
+    "node_dist": {
+      "version": "24.22.3",
+      "sha256": "061ec3e3062115705b56b51fa9cc330ab50d34b6969387d4e4b1a50c6809acc2",
+      "_note": "The official nodejs.org build node-v24.22.2-linux-x64.tar.gz, nodejs.org's newest 24.x on 2026-11-02 (released 2026-10-27), moved from 24.22.1 by scripts/node-pin.py --write on 2026-11-02; its sha256 is the one https://nodejs.org/dist/v24.22.2/SHASUMS256.txt lists (read by node-pin.py; the detached-signature check recorded here before was for 24.22.1's SHASUMS256.txt, on 2026-10-21, and was not repeated). frappecrm is a HAND kit: this block documents what product-kits/frappecrm/build/Dockerfile.vendor pins (ARG NODE_VERSION / NODE_SHA256, checked against both the published SHASUMS256.txt and the pin) and must be bumped together with it. The builder (bench build) and the runtime (socketio.js under supervisord) run this one Node build; the runtime copy has no npm/npx/corepack and reaches the offline build inside the vendored system.tar.gz. Replaces 24.21.0 (live in v1.87.0-CE-ubuntu24.04-r1): 24.22.1 fixes CVE-2026-106069, CVE-2026-106072, CVE-2026-105482, CVE-2026-105483 and CVE-2026-111497 (high), CVE-2026-105481 and CVE-2026-106074 (medium) and CVE-2026-106073 (low)."
+    },
+    "_framework_note": "Frappe is pinned to its release TAG v16.53.0 (Dockerfile.vendor ARG FRAPPE_BRANCH, commit e8d41dd0061a checked after the clone), not the floating version-16 branch, so the framework version inside the image is known and stated (audit 2026-09-25). Frappe CRM v1.89.0's pyproject.toml [tool.bench.frappe-dependencies] accepts frappe >=15.0.0,<17.0.0; v16.53.0 is the newest Frappe v16 GA release (2026-10-22), published six hours before crm v1.89.0. crm's frontend compiles Frappe's own ui/src (@framework/ui -> apps/frappe/ui/src): v16.53.0 changes no file under ui/ against v16.52.0 (the framework crm v1.88.0 shipped on), and crm v1.89.0's frontend/package.json is unchanged. Against v16.52.0 (pyproject.toml identical to v16.51.0's) v16.53.0 moves Babel~=2.18, PyJWT~=2.15, pypdf==6.19.0, WeasyPrint==70.0, Werkzeug==3.1.9 and oauthlib~=4.0, adds tzdata and an optional Python Socket.IO realtime server (python -m frappe.realtime.server; its packages are installed, the image keeps running the Node socketio.js, which v16.53.0 still ships), and adds API routes: /api/v2/mcp and the /api/v2/discovery family (System Manager only). erpnext moves to the same v16.53.0 at its v16.52.1 release.",
+    "_weasyprint_note": "WeasyPrint 70.x replaced Frappe v16.52.0's exact pin WeasyPrint==68.0, and Frappe v16.53.0 pins WeasyPrint==70.0 itself (the Dockerfile.vendor venv upgrade step keeps the floor): GHSA-r543-q48m-4c9j (HIGH; EPS images reach Ghostscript) is fixed only in 70.0, Frappe v16 deprecates WeasyPrint (frappe/utils/weasyprint.py: 'removed in version 17') and Frappe's develop branch no longer depends on it. 70.0 declares the same requirements as 68.0 and the build asserts each one is met. Frappe calls it only for builder print formats stored on WeasyPrint: frappe.get_print(as_pdf=True) -> pdf_generator hook frappe.utils.weasyprint.get_weasyprint_pdf -> weasyprint_legacy.PrintFormatGenerator.render_pdf. Measured 2026-10-10 on the offline image (render test in a throwaway build stage on <redacted: internal host>, the image's own entrypoint and supervisord with local MariaDB and Redis): a CRM Lead on a builder format stored on WeasyPrint rendered through that path to a 1-page %PDF-1.7 of 7,861 bytes (Producer 'WeasyPrint 70.0'; the legacy generator was called once; the overlaid header present), with a Letter Head to 8,243 bytes carrying both overlays, and over HTTP (download_pdf through nginx and gunicorn) to the same 7,861 bytes (HTTP 200 application/pdf); the same layout on Typst rendered 9,559 bytes; the Standard format failed with 'OSError: No wkhtmltopdf executable found'. Frappe's own TestWeasyPrintEngine passed 15/15 on a frappe-only site.",
+    "source_date_epoch_basis": "release-cut",
+    "commit_epoch": 1793289492
+  },
+  "binaries_from_source": null,
+  "runtime_packages": null
+}

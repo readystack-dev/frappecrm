@@ -1,0 +1,341 @@
+{
+ "schema": "readystack.recipe.v1",
+ "slug": "frappecrm",
+ "tag": "v1.90.0-CE-ubuntu24.04-r5",
+ "tarball": "ReadyStack-frappecrm-v1.90.0-CE-ubuntu24.04-r5.tar.gz",
+ "tarball_sha256": "770211301c80b7755990709177e3379e2fa76057213dea621f1bde10d0c1c0b4",
+ "kit_root": "v1.90.0-CE-ubuntu24.04-r5",
+ "generated_at": "2026-11-23T07:07:54Z",
+ "generator": "KitForge release/recipe_publish.py",
+ "dockerfile": "Dockerfile.offline.pinned",
+ "build_script": "BUILD_OFFLINE.sh",
+ "preview_lines": 24,
+ "pins": {
+  "upstream": {
+   "repo": "https://github.com/frappe/crm",
+   "ref": "v1.90.0",
+   "commit": "36bd8859f2a6345a620477bc708d0546e8c3f08a",
+   "url": "https://github.com/frappe/crm/tree/36bd8859f2a6345a620477bc708d0546e8c3f08a",
+   "from": "docs/provenance/BUILD_RECIPE.json"
+  },
+  "fetches": [
+   {
+    "kind": "http",
+    "url": "https://www.python.org/ftp/python/3.14.10/Python-3.14.10.tar.xz"
+   },
+   {
+    "kind": "http",
+    "url": "https://github.com/python/cpython/commit/7d9da9208fc3dc126bebca6844dfe312afc43c34.diff"
+   },
+   {
+    "kind": "http",
+    "url": "https://github.com/frappe/frappe"
+   },
+   {
+    "kind": "http",
+    "url": "https://github.com/frappe/crm"
+   },
+   {
+    "kind": "http",
+    "url": "https://frappe.io/ctr-faq"
+   }
+  ],
+  "bases": [
+   {
+    "ref": "ubuntu:24.04@sha256:9c7f200c07e3d4a03e7249d2c16bf66a51120fb876aa2242cf31451412543289",
+    "image": "ubuntu:24.04",
+    "digest": "sha256:9c7f200c07e3d4a03e7249d2c16bf66a51120fb876aa2242cf31451412543289"
+   }
+  ],
+  "toolchain": {
+   "buildkit": "moby/buildkit:v0.31.2",
+   "buildkit_image_digest": "sha256:e0e67ea9c4bb07bdef683e29f70f3b623d1eb9c82274a9ec04e6bb0511449fb0"
+  },
+  "build_method": "source-rebuild-python",
+  "source_date_epoch": 1795408354,
+  "source_date_epoch_utc": "2026-11-23T04:32:34Z",
+  "target": {
+   "image_manifest_digest": "sha256:3459b8fbfd8ce8a7a5162e96dd54ceb484265bf10460db7971cc20b10a9807ee",
+   "config_digest": "sha256:b9586b0ef291f223d0598762dd9abac2861ea5630a540c8d4e641cc4d915b1cc",
+   "image": "readystack/frappecrm:v1.90.0-CE-ubuntu24.04-r5"
+  },
+  "checksummed_files": 1292
+ },
+ "files": [
+  {
+   "path": "BASES.tsv",
+   "size": 121,
+   "sha256": "c506d719c30d576fe42dd46d1cf2a9a05f4f3f364b41e02e4ffad3a1fc19500e",
+   "lines": 1,
+   "public": "full"
+  },
+  {
+   "path": "BUILD_OFFLINE.sh",
+   "size": 8856,
+   "sha256": "6ab4f08a6ec775b32d854f03413b30ecfe555ddba78cf0de956235f5a2a39542",
+   "lines": 162,
+   "public": "preview",
+   "preview_lines": 24
+  },
+  {
+   "path": "CHECKSUMS.sha256",
+   "size": 181908,
+   "sha256": "bd9aa8d694c90e47ee3e1bccc230e4234f4b9540f47e6931a5e62f9651ab8a3a",
+   "lines": 1292,
+   "public": "account"
+  },
+  {
+   "path": "DOCKERFILE_NAME.txt",
+   "size": 26,
+   "sha256": "9aadd1ede68e016a6f163c97befc5ff2fcdc8ebd4f84b108dba63cb195fa8c84",
+   "lines": 1,
+   "public": "full"
+  },
+  {
+   "path": "Dockerfile",
+   "size": 7998,
+   "sha256": "d62e97663d9f61e8df3afb1fd88e837b12957755faebd1aa403a15a0ec4c645c",
+   "lines": 73,
+   "public": "account"
+  },
+  {
+   "path": "Dockerfile.offline",
+   "size": 7998,
+   "sha256": "d62e97663d9f61e8df3afb1fd88e837b12957755faebd1aa403a15a0ec4c645c",
+   "lines": 73,
+   "public": "account"
+  },
+  {
+   "path": "Dockerfile.offline.pinned",
+   "size": 7998,
+   "sha256": "d62e97663d9f61e8df3afb1fd88e837b12957755faebd1aa403a15a0ec4c645c",
+   "lines": 73,
+   "public": "preview",
+   "preview_lines": 24
+  },
+  {
+   "path": "Dockerfile.vendor",
+   "size": 27384,
+   "sha256": "5b5ff29bae97e3b9ce9f41235a8ccf170ba700a6319ea13f380230d504d5a8d6",
+   "lines": 376,
+   "public": "account"
+  },
+  {
+   "path": "FILE_MODES.tsv",
+   "size": 110473,
+   "sha256": "2df04187a68552647f5e8fc205bc08cd16f30f41c9458291e02a3b6734b23d5c",
+   "lines": 1488,
+   "public": "account"
+  },
+  {
+   "path": "MANIFEST.txt",
+   "size": 94082,
+   "sha256": "df71d236f19523eca2bfdfb2a79f64f8b47132a45e359b957af46cc097a86048",
+   "lines": 1294,
+   "public": "account"
+  },
+  {
+   "path": "README.md",
+   "size": 3312,
+   "sha256": "3e823705ebfd798c3f8a804bce24a8c2257227dc27cf5a1dec172b2f673f2c4c",
+   "lines": 39,
+   "public": "account"
+  },
+  {
+   "path": "SOURCE_DATE_EPOCH.txt",
+   "size": 11,
+   "sha256": "83c2a9f4906fd4957ba7ce145eb7984d1a3a2b6b64d969de430aa6c7e65eedf2",
+   "lines": 1,
+   "public": "full"
+  },
+  {
+   "path": "TARGET_DIGEST.txt",
+   "size": 466,
+   "sha256": "746bb18181d1af4fc0f9cd2f45e02484d766983a3f363cbaa36f495eae28c445",
+   "lines": 8,
+   "public": "full"
+  },
+  {
+   "path": "VERIFY_OFFLINE.sh",
+   "size": 10153,
+   "sha256": "3e8184ea230cfd8f41f977e26be6bf7bd03112c396c517837ce0c7de4f7399dd",
+   "lines": 165,
+   "public": "account"
+  },
+  {
+   "path": "docs/PROVENANCE.md",
+   "size": 2638,
+   "sha256": "162c49962e2821d9aec815739be7b4d45810aa68e179962b2b1a4d3e2cd366f0",
+   "lines": 36,
+   "public": "account"
+  },
+  {
+   "path": "docs/REBUILD.md",
+   "size": 6186,
+   "sha256": "7bda35432c661e0b9d26e787c6a4ddbd6010c4a9de5eedaa1c8aae1a1f78962f",
+   "lines": 62,
+   "public": "account"
+  },
+  {
+   "path": "docs/VERIFY.md",
+   "size": 2043,
+   "sha256": "33b06693622207b83b73383a885f293cc08d48911e61cb94b3c1ca15f1e4b595",
+   "lines": 34,
+   "public": "account"
+  },
+  {
+   "path": "docs/provenance/BASE_IMAGE_DIGESTS.lock",
+   "size": 52,
+   "sha256": "26a28f4c19195087534692fd21c5b4f3f76baf003c4538f5ec2b55fc48ca421f",
+   "lines": 2,
+   "public": "full"
+  },
+  {
+   "path": "docs/provenance/BUILD_RECIPE.json",
+   "size": 8063,
+   "sha256": "c387958103050dd2a1b5d56b28b427748d0c647cc49b184d0e502856d3df6d49",
+   "lines": 44,
+   "redactions": [
+    {
+     "line": 38,
+     "kind": "internal host"
+    }
+   ],
+   "kit_sha256": "7da8b814bfebbd0df8c9e6aa34b14ceaa60ef937154ca6fa5905ab3a0365a3cd",
+   "kit_size": 8043,
+   "public": "account"
+  },
+  {
+   "path": "docs/provenance/CUSTODY_INPUTS.json",
+   "size": 645,
+   "sha256": "6bd037a8d6132e1d19225662ff921249b896599fbce26fc46733e5e3582929fc",
+   "lines": 17,
+   "public": "account"
+  },
+  {
+   "path": "docs/provenance/SOURCE_FILE_MANIFEST.json",
+   "size": 58107,
+   "sha256": "0a226ccbd4c76cb189d6a9fcd982acdd737ad05424bffc2b8c33647bfb3f8e83",
+   "lines": 1118,
+   "public": "account"
+  },
+  {
+   "path": "docs/provenance/SOURCE_TREE_HASH.json",
+   "size": 303,
+   "sha256": "3a572655fe1af69cbbf6dd36756d9110250b602c0d2b741546c78e9380bab8bb",
+   "lines": 9,
+   "public": "full"
+  },
+  {
+   "path": "docs/provenance/SYSTEM_PINNING.lock",
+   "size": 1,
+   "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+   "lines": 1,
+   "public": "account"
+  },
+  {
+   "path": "docs/provenance/TOOLCHAIN.lock",
+   "size": 2411,
+   "sha256": "a9802763be0af9723f1d893b664a1f1c4c03d5cc66b2012103cfb2cb82221be2",
+   "lines": 48,
+   "public": "account"
+  },
+  {
+   "path": "entrypoint-aio.sh",
+   "size": 3682,
+   "sha256": "917cae40e17631c2e20eb4ad829b565c3ccaf1a80eaa4b2111ca72d764981738",
+   "lines": 62,
+   "public": "account"
+  },
+  {
+   "path": "rebuild.json",
+   "size": 1242,
+   "sha256": "071dce12781a45ef6feea3bacf3d629cd575ffcefa00f1d343a5c8d29c6f324c",
+   "lines": 31,
+   "public": "account"
+  },
+  {
+   "path": "resources/allinone/entrypoint-aio.sh",
+   "size": 3682,
+   "sha256": "917cae40e17631c2e20eb4ad829b565c3ccaf1a80eaa4b2111ca72d764981738",
+   "lines": 62,
+   "public": "account"
+  },
+  {
+   "path": "resources/allinone/frappe.conf",
+   "size": 1527,
+   "sha256": "8e606f07f82664c1d0799206710275d1816f4666447a80e70fd4989bd153ca7e",
+   "lines": 56,
+   "public": "account"
+  },
+  {
+   "path": "resources/core/main-entrypoint.sh",
+   "size": 266,
+   "sha256": "28c301d43cd50b750a050c1706dadf17cce87807e66d2db4a9713d6e6d30af85",
+   "lines": 12,
+   "public": "account"
+  },
+  {
+   "path": "resources/core/nginx/nginx-entrypoint.sh",
+   "size": 1502,
+   "sha256": "93573cdb6d483223f00b8a2dd67b40f005adb1af378d57c31b0dacdaaef0263c",
+   "lines": 52,
+   "public": "account"
+  },
+  {
+   "path": "resources/core/nginx/nginx-template.conf",
+   "size": 2946,
+   "sha256": "50b1c076351fc0c8969bd9ac8f157c0a8dd4ea348c3efc4fa935401fc2c66e2d",
+   "lines": 113,
+   "public": "account"
+  },
+  {
+   "path": "resources/core/nginx/security_headers.conf",
+   "size": 324,
+   "sha256": "ccb615012f1a7c8592041535a74aa014ef089d66c7ef5800b2a180321a8b0ec8",
+   "lines": 5,
+   "public": "account"
+  },
+  {
+   "path": "resources/core/start.sh",
+   "size": 567,
+   "sha256": "194a7225d6fb0a49dc0591d1ac450e3ff8060b93ee4a47be503ef40e61bbb48a",
+   "lines": 20,
+   "public": "account"
+  },
+  {
+   "path": "supervisor-frappe.conf",
+   "size": 1527,
+   "sha256": "8e606f07f82664c1d0799206710275d1816f4666447a80e70fd4989bd153ca7e",
+   "lines": 56,
+   "public": "account"
+  },
+  {
+   "path": "toolchain/BUILDKIT_TAG.txt",
+   "size": 22,
+   "sha256": "fcd530eeb02b063d2f047adad6eef896422a8e8d558513e5f09b2a262be32573",
+   "lines": 1,
+   "public": "full"
+  }
+ ],
+ "skipped": [],
+ "kit_adds": {
+  "bases": {
+   "files": 5,
+   "bytes": 29796854
+  },
+  "docs": {
+   "files": 1171,
+   "bytes": 44330939
+  },
+  "toolchain": {
+   "files": 1,
+   "bytes": 111529472
+  },
+  "vendored": {
+   "files": 82,
+   "bytes": 588507046
+  }
+ },
+ "redacted_files": 1
+}

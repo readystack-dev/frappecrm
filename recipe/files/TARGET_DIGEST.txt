@@ -1,0 +1,8 @@
+image_manifest_digest=sha256:3459b8fbfd8ce8a7a5162e96dd54ceb484265bf10460db7971cc20b10a9807ee
+config_digest=sha256:b9586b0ef291f223d0598762dd9abac2861ea5630a540c8d4e641cc4d915b1cc
+tag=readystack/frappecrm:v1.90.0-CE-ubuntu24.04-r5
+probe_port=8080
+probe_path=/api/method/ping
+probe_timeout=300
+verify_boot=skip
+verify_boot_reason=this image needs db, redis-cache, redis-queue (not part of this archive); boot it with your own services as the admin handbook describes

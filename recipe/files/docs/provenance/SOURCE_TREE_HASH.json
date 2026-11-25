@@ -1,0 +1,9 @@
+{
+  "schema": "kitforge.source_tree_hash.v1",
+  "slug": "frappecrm",
+  "repo": "https://github.com/frappe/crm",
+  "ref": "v1.90.0",
+  "commit": "36bd8859f2a6345a620477bc708d0546e8c3f08a",
+  "tree_listing_sha256": "bf0aa1f01cdb2aad41ae55d77ead24f1399f77b93c61cdc99c0baf7c48d8ceca",
+  "file_count": 1111
+}

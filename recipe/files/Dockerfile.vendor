@@ -1,0 +1,376 @@
+# ---- CPython 3.14.10 compiled from python.org's source against Ubuntu 24.04's own libraries (libssl3t64,
+#      libsqlite3-0, libexpat1, zlib1g, ... -- debs the scan sees and apt fixes). This stage only FETCHES the
+#      tarball (python.org's sha256, pinned in strategies/frappecrm.json source.python_runtime) and the build
+#      toolchain's debs; `cpython` compiles them with gen_dockerfile.cpython_build_cmd, and the offline build runs
+#      the same command on the same vendored inputs -- the interpreter that ships is compiled with the network off. ----
+FROM ubuntu:24.04@sha256:9c7f200c07e3d4a03e7249d2c16bf66a51120fb876aa2242cf31451412543289 AS cpython-src
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl && rm -rf /var/lib/apt/lists/* && \
+    mkdir -p /vendored-python && curl -fsSL --retry 3 -o /vendored-python/Python-3.14.10.tar.xz https://www.python.org/ftp/python/3.14.10/Python-3.14.10.tar.xz && \
+    echo "de414a57119abef52784d8993e341d53aed635fc2b05c2607d9f98a2c5b72032  /vendored-python/Python-3.14.10.tar.xz" | sha256sum -c - && \
+    curl -fsSL --retry 3 -o /vendored-python/cpython-3.14.10-7d9da92-fips-hashlib.diff https://github.com/python/cpython/commit/7d9da9208fc3dc126bebca6844dfe312afc43c34.diff && \
+    echo "125404bb224770a1f9120b88075b252b0536e9bc348c89a3e7fb9dd19868ed7d  /vendored-python/cpython-3.14.10-7d9da92-fips-hashlib.diff" | sha256sum -c -
+# a FRESH pinned base, nothing installed first: the closure is then complete for the equally fresh offline stage
+FROM ubuntu:24.04@sha256:9c7f200c07e3d4a03e7249d2c16bf66a51120fb876aa2242cf31451412543289 AS cpython-debs
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get -y --download-only --no-install-recommends install \
+      build-essential pkg-config xz-utils libssl-dev zlib1g-dev libbz2-dev libsqlite3-dev libffi-dev liblzma-dev libzstd-dev uuid-dev libexpat1-dev libncurses-dev libreadline-dev && \
+    mkdir -p /debs && cp /var/cache/apt/archives/*.deb /debs/ && echo "vendored $(ls -1 /debs/*.deb | wc -l) CPython build debs"
+FROM ubuntu:24.04@sha256:9c7f200c07e3d4a03e7249d2c16bf66a51120fb876aa2242cf31451412543289 AS cpython
+ARG SOURCE_DATE_EPOCH=1795408354
+ENV SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH}
+COPY --from=cpython-debs /debs /tmp/cpython-debs
+COPY --from=cpython-src /vendored-python/Python-3.14.10.tar.xz /tmp/Python-3.14.10.tar.xz
+COPY --from=cpython-src /vendored-python/cpython-3.14.10-7d9da92-fips-hashlib.diff /tmp/cpython-3.14.10-7d9da92-fips-hashlib.diff
+RUN set --; for f in /tmp/cpython-debs/*.deb; do [ -e "$f" ] && set -- "$@" "$f"; done; \
+    for pass in 1 2 3 4 5; do [ $# -eq 0 ] || dpkg -i --skip-same-version "$@" >/dev/null 2>&1 && break; done; \
+    dpkg --configure -a && bad= && for d in "$@"; do p=$(dpkg-deb -f "$d" Package) v=$(dpkg-deb -f "$d" Version); \
+      case "$(dpkg-query -W -f='${Version} ${db:Status-Abbrev}' "$p" 2>/dev/null)" in "$v ii"*) ;; *) bad="$bad $p=$v" ;; esac; done && \
+    { [ -z "$bad" ] || { echo "vendored debs not installed at their vendored version:$bad" >&2; false; }; } && \
+    : "${SOURCE_DATE_EPOCH:?the CPython build needs SOURCE_DATE_EPOCH}" && \
+    echo "de414a57119abef52784d8993e341d53aed635fc2b05c2607d9f98a2c5b72032  /tmp/Python-3.14.10.tar.xz" | sha256sum -c - && \
+    mkdir -p /usr/src/python && tar -xJf /tmp/Python-3.14.10.tar.xz -C /usr/src/python --strip-components=1 --no-same-owner && \
+    echo "125404bb224770a1f9120b88075b252b0536e9bc348c89a3e7fb9dd19868ed7d  /tmp/cpython-3.14.10-7d9da92-fips-hashlib.diff" | sha256sum -c - && \
+    patch -p1 --no-backup-if-mismatch -d /usr/src/python -i /tmp/cpython-3.14.10-7d9da92-fips-hashlib.diff && rm -f /tmp/cpython-3.14.10-7d9da92-fips-hashlib.diff && \
+    rm -rf /tmp/cpython-debs /tmp/Python-3.14.10.tar.xz && cd /usr/src/python && \
+    export DEB_BUILD_MAINT_OPTIONS=optimize=-lto && \
+    PYCF="$(dpkg-buildflags --get CFLAGS) $(dpkg-buildflags --get CPPFLAGS)" && PYLD="$(dpkg-buildflags --get LDFLAGS)" && \
+    ./configure --build=x86_64-linux-gnu --prefix=/usr/local --enable-shared --enable-loadable-sqlite-extensions --enable-option-checking=fatal --disable-test-modules --without-static-libpython --with-ensurepip=install --with-system-expat --without-system-libmpdec --with-dbmliborder= py_cv_module__dbm=n/a py_cv_module__gdbm=n/a py_cv_module__tkinter=n/a && \
+    make -j"$(nproc)" "EXTRA_CFLAGS=$PYCF" "LDFLAGS=$PYLD,--strip-all" && \
+    rm python && make -j"$(nproc)" "EXTRA_CFLAGS=$PYCF" "LDFLAGS=$PYLD,--strip-all,-rpath='\$\$ORIGIN/../lib'" python && \
+    make install COMPILEALL_OPTS=--invalidation-mode=checked-hash && \
+    cd / && rm -rf /usr/src/python /usr/local/lib/python3.14/idlelib /usr/local/lib/python3.14/tkinter /usr/local/lib/python3.14/turtledemo /usr/local/bin/idle3* && \
+    for s in pip3 pydoc3 python3 python3-config; do ln -sfT "$s" "/usr/local/bin/${s%3*}${s#*3}"; done && \
+    ldconfig && /usr/local/bin/python3 -I -B -c "import ssl, sqlite3, zlib, bz2, lzma, ctypes, uuid, pyexpat, decimal, readline, curses, hashlib, compression.zstd, sys, importlib.util as u; bad = [m for m in ('_dbm', '_gdbm', '_tkinter') if u.find_spec(m)]; assert not bad, ('built but must not be', bad); print(sys.version.replace(chr(10), ' '), '|', ssl.OPENSSL_VERSION, '| sqlite', sqlite3.sqlite_version, '| expat', pyexpat.EXPAT_VERSION)" && \
+    ldd /usr/local/lib/python3.14/lib-dynload/_ssl.cpython-*.so | grep -qE 'libssl.so.3 => /(usr/)?lib/x86_64-linux-gnu/' && ldd /usr/local/lib/python3.14/lib-dynload/_sqlite3.cpython-*.so | grep -qE 'libsqlite3.so.0 => /(usr/)?lib/x86_64-linux-gnu/' && ldd /usr/local/lib/python3.14/lib-dynload/pyexpat.cpython-*.so | grep -qE 'libexpat.so.1 => /(usr/)?lib/x86_64-linux-gnu/' && ldd /usr/local/lib/python3.14/lib-dynload/_ctypes.cpython-*.so | grep -qE 'libffi.so.8 => /(usr/)?lib/x86_64-linux-gnu/' && ldd /usr/local/lib/python3.14/lib-dynload/_lzma.cpython-*.so | grep -qE 'liblzma.so.5 => /(usr/)?lib/x86_64-linux-gnu/' && ldd /usr/local/lib/python3.14/lib-dynload/_bz2.cpython-*.so | grep -qE 'libbz2.so.1.0 => /(usr/)?lib/x86_64-linux-gnu/' && ldd /usr/local/lib/python3.14/lib-dynload/_uuid.cpython-*.so | grep -qE 'libuuid.so.1 => /(usr/)?lib/x86_64-linux-gnu/' && ldd /usr/local/lib/python3.14/lib-dynload/zlib.cpython-*.so | grep -qE 'libz.so.1 => /(usr/)?lib/x86_64-linux-gnu/'
+
+# ---- NODE: the official nodejs.org linux-x64 build, pinned by exact version + sha256 (strategies/frappecrm.json
+#      source.node_dist documents the same pin -- bump both together), checked against the release's SHASUMS256.txt
+#      AND the pin. /opt/node is the full build (npm + corepack) for the bench builder; /opt/node-runtime is the same
+#      files minus npm/npx/corepack, which the runtime never runs (supervisord starts `node socketio.js`). It replaces
+#      the nvm installs, which ran an unpinned nvm script and fetched an unverified Node. ----
+FROM ubuntu:24.04@sha256:9c7f200c07e3d4a03e7249d2c16bf66a51120fb876aa2242cf31451412543289 AS nodedist
+ARG NODE_VERSION=24.22.3
+ARG NODE_SHA256=061ec3e3062115705b56b51fa9cc330ab50d34b6969387d4e4b1a50c6809acc2
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl && rm -rf /var/lib/apt/lists/*
+WORKDIR /nodedist
+RUN curl -fsSLO "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.gz" \
+ && curl -fsSLO "https://nodejs.org/dist/v${NODE_VERSION}/SHASUMS256.txt" \
+ && grep " node-v${NODE_VERSION}-linux-x64.tar.gz\$" SHASUMS256.txt | sha256sum -c - \
+ && echo "${NODE_SHA256}  node-v${NODE_VERSION}-linux-x64.tar.gz" | sha256sum -c - \
+ && mkdir -p /opt/node /opt/node-runtime \
+ && tar -xzf "node-v${NODE_VERSION}-linux-x64.tar.gz" -C /opt/node --strip-components=1 --no-same-owner \
+ && cp -a /opt/node/. /opt/node-runtime/ \
+ && mkdir -p /opt/node-runtime/share/doc/nodejs \
+ && mv /opt/node-runtime/LICENSE /opt/node-runtime/share/doc/nodejs/LICENSE \
+ && rm -rf /opt/node-runtime/CHANGELOG.md /opt/node-runtime/README.md \
+           /opt/node-runtime/lib/node_modules/npm /opt/node-runtime/lib/node_modules/corepack \
+           /opt/node-runtime/bin/npm /opt/node-runtime/bin/npx /opt/node-runtime/bin/corepack
+
+# Every Python stage below starts here: one interpreter for the builders and the runtime, so compiled wheels match.
+FROM ubuntu:24.04@sha256:9c7f200c07e3d4a03e7249d2c16bf66a51120fb876aa2242cf31451412543289 AS python-base
+ENV LANG=C.UTF-8
+COPY --from=cpython /usr/local/ /usr/local/
+# ca-certificates netbase tzdata: what the official python images add to their distro base (CA roots for pip and
+# ssl, /etc/services, the zoneinfo database Django's TIME_ZONE needs); ubuntu:24.04 has none of them. Then the
+# libraries the compiled interpreter loads (gen_dockerfile.PY_SRC_RUNTIME_LIBS) -- Ubuntu debs in the SBOM.
+# ldconfig: libpython3.14.so is in /usr/local/lib. userdel: ubuntu:24.04 ships an `ubuntu` account holding uid/gid
+# 1000; removing it lets the app account keep the uid 1000 it had on the Debian base (volume ownership unchanged).
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates netbase tzdata \
+      libssl3t64 zlib1g libbz2-1.0 libsqlite3-0 libffi8 liblzma5 libzstd1 libuuid1 libexpat1 libncursesw6 libtinfo6 libreadline8t64 && \
+    rm -rf /var/lib/apt/lists/* && ldconfig && userdel --remove ubuntu && python3 --version
+
+FROM python-base AS base
+
+# chromium-headless-shell is a Debian package; Ubuntu 24.04 ships Chromium only as a snap, so leave this false.
+ARG INSTALL_CHROMIUM=false
+
+# Node for the bench build: the pinned nodejs.org build (nodedist), with npm + corepack.
+COPY --from=nodedist /opt/node/ /usr/local/
+
+RUN useradd -ms /bin/bash frappe \
+    && apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get -y --no-install-recommends dist-upgrade \
+    && apt-get install --no-install-recommends -y \
+    curl \
+    git \
+    vim \
+    nginx \
+    gettext-base \
+    file \
+    # weasyprint dependencies
+    libpango-1.0-0 \
+    libharfbuzz0b \
+    libpangoft2-1.0-0 \
+    libpangocairo-1.0-0 \
+    # (restic dropped for lean Grade-A image)
+    gpg \
+    # MariaDB
+    mariadb-client \
+    less \
+    # Postgres
+    libpq-dev \
+    postgresql-client \
+    # For healthcheck
+    wait-for-it \
+    jq \
+    # For MIME type detection
+    media-types \
+    # NodeJS: the pinned nodejs.org build is already in /usr/local (COPY above); yarn + pnpm for the bench build.
+    # yarn 1.22.22: Yarn classic's newest release, the version npm's `latest` tag named on 2026-11-02 (until then the
+    # install named no version); npm checks the tarball against the registry's integrity hash.
+    && node --version \
+    && npm install -g yarn@1.22.22 \
+    && corepack enable pnpm \
+    # (wkhtmltopdf + qt dropped for lean Grade-A image) \
+    # Chromium
+    && if [ "$INSTALL_CHROMIUM" != "false" ]; then \
+        DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
+        chromium-headless-shell; \
+    fi \
+    # Clean up
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -fr /etc/nginx/sites-enabled/default \
+    && mkdir -p /etc/nginx/snippets \
+    # frappe-bench 5.31.1 for `bench init` / `bench build`: PyPI's newest release on 2026-11-02 (published 2026-10-23),
+    # the version the vendor stages of the 2026-11-01 releases installed by date (until then the install named no version)
+    && pip3 install frappe-bench==5.31.1 \
+    # Fixes for non-root nginx and logs to stdout
+    && sed -i '/user www-data/d' /etc/nginx/nginx.conf \
+    && ln -sf /dev/stdout /var/log/nginx/access.log && ln -sf /dev/stderr /var/log/nginx/error.log \
+    && touch /run/nginx.pid \
+    && chown -R frappe:frappe /etc/nginx/conf.d \
+    && chown -R frappe:frappe /etc/nginx/nginx.conf \
+    && chown -R frappe:frappe /etc/nginx/snippets \
+    && chown -R frappe:frappe /var/log/nginx \
+    && chown -R frappe:frappe /var/lib/nginx \
+    && chown -R frappe:frappe /run/nginx.pid
+
+COPY resources/core/nginx/nginx-template.conf /templates/nginx/frappe.conf.template
+COPY resources/core/nginx/nginx-entrypoint.sh /usr/local/bin/nginx-entrypoint.sh
+COPY resources/core/nginx/security_headers.conf /etc/nginx/snippets/security_headers.conf
+RUN chmod 755 /usr/local/bin/nginx-entrypoint.sh
+
+FROM base AS build
+
+RUN apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
+    # For frappe framework
+    wget \
+    # For psycopg2
+    libpq-dev \
+    # Other
+    libffi-dev \
+    liblcms2-dev \
+    libldap-dev \
+    libmariadb-dev \
+    libsasl2-dev \
+    libtiff-dev \
+    libwebp-dev \
+    pkg-config \
+    redis-tools \
+    rlwrap \
+    tk8.6-dev \
+    cron \
+    # For pandas
+    gcc \
+    build-essential \
+    libbz2-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+USER frappe
+
+FROM build AS builder
+
+ARG FRAPPE_BRANCH=v16.53.0
+# Each tag must resolve to its pinned commit (frappe v16.53.0 2026-10-22T16:59:36Z, crm v1.90.0 2026-10-29T15:58:12Z):
+# a moved tag fails the build.
+ARG FRAPPE_COMMIT=e8d41dd0061a32ee781caefe5d0b0d2bb7c15362
+ARG FRAPPE_PATH=https://github.com/frappe/frappe
+ARG CRM_REPO=https://github.com/frappe/crm
+ARG CRM_BRANCH=v1.90.0
+ARG CRM_COMMIT=36bd8859f2a6345a620477bc708d0546e8c3f08a
+RUN bench init \
+  --frappe-branch=${FRAPPE_BRANCH} \
+  --frappe-path=${FRAPPE_PATH} \
+  --no-procfile \
+  --no-backups \
+  --skip-redis-config-generation \
+  --verbose \
+  /home/frappe/frappe-bench && \
+  cd /home/frappe/frappe-bench && \
+  bench get-app --branch=${CRM_BRANCH} --resolve-deps crm ${CRM_REPO} && \
+  echo "{}" > sites/common_site_config.json && \
+  test "$(git -C apps/frappe rev-parse HEAD)" = "${FRAPPE_COMMIT}" && \
+  test "$(git -C apps/crm rev-parse HEAD)" = "${CRM_COMMIT}" && \
+  find apps -mindepth 1 -path "*/.git" | xargs rm -fr
+
+# Prune BUILD-ONLY node_modules — the frontend SPA is already compiled to sites/assets, so
+# esbuild/vite/rollup + the crm frontend build deps are dead weight (the 73 golang esbuild
+# CVEs + most npm). Pruned in the BUILDER so the final COPY takes the already-clean tree.
+RUN cd /home/frappe/frappe-bench && \
+    rm -rf apps/crm/frontend/node_modules && \
+    find apps -type d \( -name esbuild -o -name "esbuild-linux-64" -o -name "@esbuild" \) -exec rm -rf {} + 2>/dev/null; \
+    find apps -type d \( -name vite -o -name rollup -o -name "@rollup" -o -name ".vite" \) -exec rm -rf {} + 2>/dev/null; \
+    : "replace frappe 316M build-toolchain node_modules with ONLY the socketio runtime deps" && \
+    mkdir -p /tmp/minnm && cd /tmp/minnm && \
+    : "npm overrides pin the TRANSITIVE deps Scout flags (chain 407 verdict). socket.io pulls" \
+    : "these in indirectly, so a plain install cannot reach them — overrides is npm's lever" \
+    : "for the same job Go dep_bumps do." && \
+    printf '%s' '{"overrides":{"brace-expansion":">=5.0.9","browserslist":">=4.28.7","socket.io-parser":">=4.2.7","ws":">=8.21.0"}}' > package.json && \
+    : "socket.io 4.8.4 and @redis/client 6.3.1: the versions the 2026-11-01 releases carry (their SBOMs) and npm's" \
+    : "latest on 2026-11-02; until then the install named no version. npm checks each tarball's integrity hash." && \
+    npm install --no-audit --no-fund --omit=dev socket.io@4.8.4 @redis/client@6.3.1 && \
+    rm -rf /home/frappe/frappe-bench/apps/frappe/node_modules && \
+    mv /tmp/minnm/node_modules /home/frappe/frappe-bench/apps/frappe/node_modules && \
+    cd /home/frappe/frappe-bench && rm -rf /tmp/minnm && \
+    rm -rf /home/frappe/frappe-bench/apps/crm/node_modules && \
+    : "NESTED sub-apps ship their own node_modules too — v16 added apps/erpnext/banking" \
+    : "(317MB incl. @typescript-eslint) which the top-level prune missed and which carried" \
+    : "every remaining npm CVE. Keep ONLY apps/frappe/node_modules (the socket.io runtime)." && \
+    find /home/frappe/frappe-bench/apps -mindepth 2 -type d -name node_modules \
+         -not -path "/home/frappe/frappe-bench/apps/frappe/node_modules*" \
+         -prune -exec rm -rf {} + 2>/dev/null; \
+    : "CVE floors, each CEILINGED at Frappe v16.53.0's own pin (pyproject ~=): pip --upgrade takes the NEWEST" \
+    : "release in range, and a floor without a ceiling can cross upstream's range (the paperlessngx Django lesson)." \
+    : "PyJWT 2.15.x and pypdf 6.19.0 crossed Frappe v16.52.0's pins (2.13.x, ==6.15.0); Frappe v16.53.0 pins exactly those" \
+    : "lines (PyJWT~=2.15.0, pypdf==6.19.0). pypdf crosses that pin again to 6.21.x: GHSA-6c7f-9265-g8fw, GHSA-gmh7-3g9r-mjh5," \
+    : "GHSA-jr96-gvgh-j3r4 (HIGH, published 2026-10-23; erpnext chain 639 G8 OSV park) are fixed only in 6.21.2; 6.20.0-6.21.2" \
+    : "add security limits and bug fixes, no removal (Frappe develop pins 6.20.1). Same list as erpnext (same Frappe v16.53.0)." \
+    : "GitPython crosses Frappe v16.53.0's GitPython~=3.1.45 to 3.2.x: GHSA-83vg-56qc-22m7 (HIGH, published 2026-10-22: a submodule's" \
+    : ".git path is validated only after cloning into it) is fixed only in 3.2.1, and Frappe develop already pins GitPython~=3.2.0" \
+    : "(98d4fd8, a pyproject-only change). Frappe uses it for app version and branch lookups. Ceiling at the 3.2 line." \
+    : "filelock crosses Frappe v16.53.0's filelock~=3.20.1 to 4.2.x: GHSA-v4x8-3wr5-3wq8 (HIGH, published 2026-10-23: the" \
+    : "SQLite ReadWriteLock reopens its database by name) covers 3.20.4 up to 4.2.1, so 3.x has no fix past 3.20.3. Frappe" \
+    : "develop pins filelock~=4.1.1 (23ae963, a pyproject-only change) and Frappe calls only FileLock(path, timeout=) and" \
+    : "Timeout (frappe/utils/synchronization.py). Ceiling at the 4.2 line." && \
+    : "WeasyPrint 70.x crossed Frappe v16.52.0's EXACT pin (WeasyPrint==68.0); v16.53.0 pins WeasyPrint==70.0. GHSA-r543-q48m-4c9j (HIGH," \
+    : "EPS images reach Ghostscript; fixed only in 70.0), Frappe v16 deprecates WeasyPrint (frappe/utils/weasyprint.py:" \
+    : "removed in v17) and Frappe develop drops it. 70.0 declares the same requirements as 68.0; the check after the" \
+    : "install asserts every one is met. Proven through Frappe's own path: a builder print format stored on WeasyPrint," \
+    : "frappe.get_print(as_pdf=True) -> get_weasyprint_pdf hook -> weasyprint_legacy.PrintFormatGenerator.render_pdf." \
+    : "certifi has no Frappe pin to ceiling it at: GHSA-6q48-6c7w-9gw2 (CRITICAL, published 2026-10-20: emSign roots with" \
+    : "compromised intermediate CA keys) is fixed in 2026.10.19; a date-versioned CA bundle with no API needs no ceiling." \
+    : "Pillow crosses Frappe's Pillow~=12.3.0 to 13.x: GHSA-8g5g-8vmr-9782 (CRITICAL) + 6 HIGH (2026-10-20) are fixed only in" \
+    : "13.0.0. None of 13.0's removals is used by Frappe, its apps or this env; Frappe's image helpers measured identical" \
+    : "except RGBA/LA thumbnail resampling (<1/255 mean). Ceiling at the major the fix is in." && \
+    /home/frappe/frappe-bench/env/bin/pip install --no-cache-dir --upgrade "pillow>=13.0.0,<14" "cryptography>=46.0.8,<50.1" "msgpack>=1.2.1,<2" "setuptools>=78.1.1,<85" "PyJWT>=2.14.0,<2.16" "pypdf>=6.21.2,<6.22" "WeasyPrint>=70.0,<71" "certifi>=2026.10.19" "GitPython>=3.2.1,<3.3" "filelock>=4.2.1,<4.3" && \
+    /home/frappe/frappe-bench/env/bin/python -c "import importlib.metadata as m; from packaging.requirements import Requirement; rs = [r for r in map(Requirement, m.requires('weasyprint') or []) if not r.marker or r.marker.evaluate({'extra': ''})]; bad = [str(r) for r in rs if not r.specifier.contains(m.version(r.name), prereleases=True)]; assert m.version('weasyprint').split('.')[0] == '70', m.version('weasyprint'); assert not bad, bad; print('WeasyPrint', m.version('weasyprint'), 'requirements met:', ', '.join(f'{r.name} {m.version(r.name)}' for r in rs))" && \
+    true
+
+# =====================================================================
+# LEAN RUNTIME BASE — a fresh base with ONLY the runtime deps, so the final
+# image never inherits the build-only tools (npm/undici, uv/quick-xml) that a
+# whiteout in a later layer cannot hide from Scout. Same-layer strips: node
+# WITHOUT npm/corepack; frappe-bench WITHOUT uv; click bumped to the CVE fix.
+# =====================================================================
+FROM python-base AS runtime
+# Node for socketio.js only: the pinned nodejs.org build WITHOUT npm/npx/corepack (nodedist /opt/node-runtime). It
+# rides to the offline build inside system.tar.gz (/usr/local/bin/node), like ghost's.
+COPY --from=nodedist /opt/node-runtime/ /usr/local/
+# certifi floor on the system frappe-bench install too: requests pulls certifi into /usr/local/lib/python3.14/
+# site-packages, which ships and is scanned like the bench env (GHSA-6q48-6c7w-9gw2, fixed in 2026.10.19).
+RUN useradd -ms /bin/bash frappe \
+    && apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get -y --no-install-recommends dist-upgrade \
+    && apt-get install --no-install-recommends -y \
+    curl git nginx gettext-base file \
+    libpango-1.0-0 libharfbuzz0b libpangoft2-1.0-0 libpangocairo-1.0-0 \
+    gpg mariadb-client less libpq-dev postgresql-client wait-for-it jq media-types supervisor \
+    && node --version && test ! -e /usr/local/lib/node_modules/npm && test ! -e /usr/local/bin/npm \
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -fr /etc/nginx/sites-enabled/default \
+    && mkdir -p /etc/nginx/snippets \
+    && : "frappe-bench 5.24.1: the newest release that allows the click CVE floor (5.25.0 and later declare click~=8.2.0," \
+    && : "PyPI 2026-11-02), what pip resolved unpinned until 2026-11-02 and what the 2026-11-01 releases carry (SBOM)." \
+    && pip3 install --no-cache-dir frappe-bench==5.24.1 "click>=8.3.3,<9" "certifi>=2026.10.19" \
+    && : "GitPython for the SYSTEM bench too (GHSA-83vg-56qc-22m7, HIGH, fixed only in 3.2.1). The click floor above makes" \
+    && : "pip resolve frappe-bench 5.24.1 (5.30+ require click~=8.2.0), which declares gitpython~=3.1.30 and so brought 3.1.62" \
+    && : "(chain 639 verdict: the bench env had 3.2.1, /usr/local/lib/python3.14 still 3.1.62). A second install moves it to" \
+    && : "3.2.x past that declaration (pip warns, exits 0; frappe-bench 5.31.1 itself requires gitpython~=3.2.1). bench uses" \
+    && : "git.Repo only (bench/app.py, bench/utils/app.py); bench must still import after the click shim (check below)." \
+    && pip3 install --no-cache-dir --upgrade "GitPython>=3.2.1,<3.3" \
+    && python3 -c "import importlib.metadata as m; v=m.version('gitpython'); assert v.split('.')[:2] == ['3', '2'], v; print('system GitPython', v)" \
+    && python3 -c "f='/usr/local/lib/python3.14/site-packages/bench/utils/cli.py'; s=open(f).read(); s=s.replace('from click.core import _check_multicommand','try:\n    from click.core import _check_multicommand\nexcept ImportError:\n    def _check_multicommand(*a,**k):\n        return None'); open(f,'w').write(s)" \
+    && python3 -c "import git, bench.cli, bench.app, bench.utils.app; print('bench imports with GitPython', git.__version__)" \
+    && rm -f /usr/local/bin/uv \
+    && rm -rf /usr/local/lib/python3.14/site-packages/uv /usr/local/lib/python3.14/site-packages/uv-*.dist-info \
+    && sed -i '/user www-data/d' /etc/nginx/nginx.conf \
+    && ln -sf /dev/stdout /var/log/nginx/access.log && ln -sf /dev/stderr /var/log/nginx/error.log \
+    && touch /run/nginx.pid \
+    && chown -R frappe:frappe /etc/nginx/conf.d /etc/nginx/nginx.conf /etc/nginx/snippets /var/log/nginx /var/lib/nginx /run/nginx.pid
+
+COPY resources/core/nginx/nginx-template.conf /templates/nginx/frappe.conf.template
+COPY resources/core/nginx/nginx-entrypoint.sh /usr/local/bin/nginx-entrypoint.sh
+COPY resources/core/nginx/security_headers.conf /etc/nginx/snippets/security_headers.conf
+RUN chmod 755 /usr/local/bin/nginx-entrypoint.sh
+
+FROM runtime AS crm
+
+USER frappe
+
+RUN echo "echo \"Commands restricted in prodution container, Read FAQ before you proceed: https://frappe.io/ctr-faq\"" >> ~/.bashrc
+
+COPY --from=builder --chown=frappe:frappe /home/frappe/frappe-bench /home/frappe/frappe-bench
+
+# pip is BUILD-ONLY: the runtime runs gunicorn from the venv and never installs packages.
+# pip ships VENDORED copies of msgpack/setuptools under pip/_vendor (vendor.txt pins them at
+# msgpack==1.1.2, setuptools==70.3.0) which Scout reports as the image's versions even when the
+# real venv carries patched ones — root-caused on the erpnext v16 twin (chain 398). Removing pip
+# removes that phantom CVE surface. Same pattern as the authentik/paperless uv-removal lesson.
+USER root
+RUN rm -rf /usr/local/lib/python3.14/site-packages/pip \
+           /usr/local/lib/python3.14/site-packages/pip-*.dist-info \
+           /usr/local/bin/pip /usr/local/bin/pip3 /usr/local/bin/pip3.14 \
+           /home/frappe/frappe-bench/env/lib/python3.14/site-packages/pip \
+           /home/frappe/frappe-bench/env/lib/python3.14/site-packages/pip-*.dist-info \
+           /home/frappe/frappe-bench/env/bin/pip /home/frappe/frappe-bench/env/bin/pip3 \
+           /home/frappe/frappe-bench/env/bin/pip3.14
+USER frappe
+
+WORKDIR /home/frappe/frappe-bench
+
+# Move assets to image-layer storage
+RUN cp -r /home/frappe/frappe-bench/sites/assets /home/frappe/frappe-bench/assets && \
+  rm -rf /home/frappe/frappe-bench/sites/assets
+
+VOLUME [ \
+  "/home/frappe/frappe-bench/sites", \
+  "/home/frappe/frappe-bench/logs" \
+]
+
+USER root
+# This entrypoint script link build assets of the image to the mounted sites volume at container initialization
+COPY resources/core/main-entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod 755 /usr/local/bin/entrypoint.sh
+
+COPY resources/core/start.sh /usr/local/bin/start.sh
+RUN chmod 755 /usr/local/bin/start.sh
+
+# Single-container product image: supervisord runs backend + socketio + worker + scheduler +
+# nginx frontend; the entrypoint does first-boot configurator + create-site (+MariaDB/Redis sidecars).
+COPY resources/allinone/frappe.conf /etc/supervisor/frappe.conf
+COPY resources/allinone/entrypoint-aio.sh /usr/local/bin/entrypoint-aio.sh
+RUN chmod 755 /usr/local/bin/entrypoint-aio.sh
+
+USER frappe
+EXPOSE 8080
+ENTRYPOINT ["/usr/local/bin/entrypoint-aio.sh"]
+
+
+# =====================================================================
+# VENDOR EXPORT — tar the built aio image's filesystem so the offline build
+# reassembles it onto the pinned base with ZERO network (docuseal pattern).
+# =====================================================================
+FROM crm AS export-src
+USER root
+RUN mkdir -p /export && \
+    tar czf /export/home.tar.gz -C / home && \
+    tar czf /export/system.tar.gz --exclude='./usr/local/bin/python3*' --exclude='./usr/local/bin/python' --exclude='./usr/local/bin/python-config' --exclude='./usr/local/bin/pip*' --exclude='./usr/local/bin/pydoc*' --exclude='./usr/local/bin/idle3*' --exclude='./usr/local/lib/libpython3*' --exclude='./usr/local/lib/python3.14' --exclude='./usr/local/lib/pkgconfig/python*' --exclude='./usr/local/include/python3.14' --exclude='./usr/local/share/man/man1/python3*' --exclude=./var/cache --exclude=./var/log \
+        --exclude=./var/lib/apt/lists -C / usr etc opt var templates && \
+    tar czf /export/site.tar.gz -C / usr/local/lib/python3.14/site-packages && \
+    echo "vendored: $(du -sh /export | cut -f1)"
+
+FROM scratch AS export
+COPY --from=export-src /export/ /frappecrm-src/
+COPY --from=cpython-src /vendored-python/ /frappecrm-src/python/
+COPY --from=cpython-debs /debs/ /frappecrm-src/python/debs/

@@ -1,0 +1,48 @@
+{
+  "build_method": "source-rebuild-python",
+  "chain_id": 1201,
+  "dep_bumps": [],
+  "expected_residuals": [],
+  "images": [
+    {
+      "digest": "sha256:9c7f200c07e3d4a03e7249d2c16bf66a51120fb876aa2242cf31451412543289",
+      "ref": "ubuntu:24.04",
+      "role": "base"
+    }
+  ],
+  "mod_replaces": [],
+  "schema": "kitforge.toolchain_lock.v1",
+  "slug": "frappecrm",
+  "source": {
+    "commit": "36bd8859f2a6345a620477bc708d0546e8c3f08a",
+    "commit_epoch": 1793289492,
+    "framework_branch": "v16.53.0",
+    "framework_repo": "https://github.com/frappe/frappe",
+    "node_dist": {
+      "sha256": "061ec3e3062115705b56b51fa9cc330ab50d34b6969387d4e4b1a50c6809acc2",
+      "version": "24.22.3"
+    },
+    "python_runtime": {
+      "patches": [
+        {
+          "commit": "7d9da9208fc3dc126bebca6844dfe312afc43c34",
+          "name": "cpython-3.14.10-7d9da92-fips-hashlib.diff",
+          "python_version": "3.14.10",
+          "sha256": "125404bb224770a1f9120b88075b252b0536e9bc348c89a3e7fb9dd19868ed7d",
+          "url": "https://github.com/python/cpython/commit/7d9da9208fc3dc126bebca6844dfe312afc43c34.diff",
+          "why": "CVE-2026-119170 is a hashlib FIPS-property regression in CPython 3.14.10 only; python.org has released no 3.14.11, so the fix is taken as upstream's own commit 7d9da92 from the 3.14 branch (gh-160923 / PR #160984, 2026-11-06), applied unmodified before configure. Owner policy 2026-11-17: apply upstream's exact fix commit ourselves rather than wait, and never hand-write a fix. The sha256 is of the commit's .diff as GitHub serves it (read 2026-11-17 for homeassistant; downloaded again and re-hashed 2026-11-23)."
+        }
+      ],
+      "provider": "ubuntu-source",
+      "sha256": "de414a57119abef52784d8993e341d53aed635fc2b05c2607d9f98a2c5b72032",
+      "version": "3.14.10"
+    },
+    "python_version": "3.14",
+    "ref": "v1.90.0",
+    "repo": "https://github.com/frappe/crm",
+    "source_date_epoch": 1795408354,
+    "source_date_epoch_basis": "release-cut",
+    "source_date_epoch_provenance": "the time release v1.90.0-CE-ubuntu24.04-r5 was cut (2026-11-23T04:32:34Z), by scripts/rerelease-agenda.py: ReadyStack dates an image by when its release was packaged (owner 2026-11-10), recorded here once and used by every rebuild of the release; it builds upstream commit 36bd8859f2a6, dated 2026-10-29T15:58:12Z (source.commit_epoch)."
+  },
+  "version": "v1.90.0"
+}
