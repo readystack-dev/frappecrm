@@ -1269,8 +1269,8 @@ vendored/frappecrm-src/python/debs/libquadmath0_14.2.0-4ubuntu2~24.04.1_amd64.de
 vendored/frappecrm-src/python/debs/libreadline-dev_8.2-4build1_amd64.deb
 vendored/frappecrm-src/python/debs/libreadline8t64_8.2-4build1_amd64.deb
 vendored/frappecrm-src/python/debs/libsframe1_2.42-4ubuntu2.10_amd64.deb
-vendored/frappecrm-src/python/debs/libsqlite3-0_3.45.1-1ubuntu2.9_amd64.deb
-vendored/frappecrm-src/python/debs/libsqlite3-dev_3.45.1-1ubuntu2.9_amd64.deb
+vendored/frappecrm-src/python/debs/libsqlite3-0_3.45.1-1ubuntu2.11_amd64.deb
+vendored/frappecrm-src/python/debs/libsqlite3-dev_3.45.1-1ubuntu2.11_amd64.deb
 vendored/frappecrm-src/python/debs/libssl-dev_3.0.13-0ubuntu3.16_amd64.deb
 vendored/frappecrm-src/python/debs/libstdc++-13-dev_13.3.0-6ubuntu2~24.04.1_amd64.deb
 vendored/frappecrm-src/python/debs/libtsan2_14.2.0-4ubuntu2~24.04.1_amd64.deb

@@ -16,16 +16,16 @@
     "context": ".",
     "dockerfile": "Dockerfile.offline.pinned",
     "mtime_policy": "clamp",
-    "source_date_epoch": 1795408354,
-    "tree_hash": "sha256:faeaf9d5b396eb6b74bae840c83dd672d9bb5559e39c596d439e12f3664704c8"
+    "source_date_epoch": 1795543294,
+    "tree_hash": "sha256:6ae33875bff24ec4c4bb991de763849f1b9f6eef2a7ab4f076487f1dd56a648c"
   },
   "probe": {
     "skip": "this image needs db, redis-cache, redis-queue (not part of this archive); boot it with your own services as the admin handbook describes"
   },
   "schema": "readystack-rebuild-bundle/v0.1",
   "subject": {
-    "config_digest": "sha256:b9586b0ef291f223d0598762dd9abac2861ea5630a540c8d4e641cc4d915b1cc",
-    "image_manifest_digest": "sha256:3459b8fbfd8ce8a7a5162e96dd54ceb484265bf10460db7971cc20b10a9807ee",
-    "name": "docker.io/readystack/frappecrm:v1.90.0-CE-ubuntu24.04-r5"
+    "config_digest": "sha256:3d6e2267f5aab7c52dd1ebeecbff8604380d8a8d3a05890b99af9ad6c61f8341",
+    "image_manifest_digest": "sha256:de5a06a514d23e99f0ae97b0d330ffad010b26fb95aa6e91399c438eb6a4d593",
+    "name": "docker.io/readystack/frappecrm:v1.90.0-CE-ubuntu24.04-r6"
   }
 }

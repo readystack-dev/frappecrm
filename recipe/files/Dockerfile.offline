@@ -5,7 +5,7 @@
 # CPython 3.14.10 COMPILED HERE, offline (--network=none), from python.org's tarball (sha256 re-checked) and
 # the vendored build debs, by the same command the vendor stage ran; linked against Ubuntu's libraries.
 FROM ubuntu:24.04@sha256:9c7f200c07e3d4a03e7249d2c16bf66a51120fb876aa2242cf31451412543289 AS cpython
-ARG SOURCE_DATE_EPOCH=1795408354
+ARG SOURCE_DATE_EPOCH=1795543294
 ENV SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH}
 COPY vendored/frappecrm-src/python/debs/ /tmp/cpython-debs/
 COPY vendored/frappecrm-src/python/Python-3.14.10.tar.xz /tmp/Python-3.14.10.tar.xz
@@ -35,7 +35,7 @@ RUN set --; for f in /tmp/cpython-debs/*.deb; do [ -e "$f" ] && set -- "$@" "$f"
 # Runtime: ubuntu:24.04, digest-pinned, + the interpreter compiled above; the vendored filesystem (which no longer
 # carries an interpreter) is laid over it, then site-packages, then the app.
 FROM ubuntu:24.04@sha256:9c7f200c07e3d4a03e7249d2c16bf66a51120fb876aa2242cf31451412543289
-ARG SOURCE_DATE_EPOCH=1795408354
+ARG SOURCE_DATE_EPOCH=1795543294
 ENV LANG=C.UTF-8 PYTHONUNBUFFERED=1
 COPY --from=cpython /usr/local/ /usr/local/
 ADD vendored/frappecrm-src/system.tar.gz /
@@ -61,7 +61,7 @@ ENTRYPOINT ["/usr/local/bin/entrypoint-aio.sh"]
 # the set a generated kit carries (gen_dockerfile.label_lines). Written by scripts/kit_migrations.py;
 # scripts/retarget.py re-renders it with every retarget. Never edit it by hand.
 LABEL org.opencontainers.image.title="Frappe CRM"
-LABEL org.opencontainers.image.version="v1.90.0-CE-ubuntu24.04-r5"
+LABEL org.opencontainers.image.version="v1.90.0-CE-ubuntu24.04-r6"
 LABEL org.opencontainers.image.licenses="AGPL-3.0-only"
 LABEL org.opencontainers.image.source="https://github.com/frappe/crm"
 LABEL org.opencontainers.image.vendor="ReadyStack.dev"
