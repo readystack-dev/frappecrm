@@ -1,4 +1,4 @@
-# Provenance — Frappe CRM (`v1.90.0-CE-ubuntu24.04-r6`)
+# Provenance — Frappe CRM (`v1.90.0-CE-ubuntu24.04-r7`)
 
 Every item below is copied from a record in this archive; the record is named in brackets.
 
@@ -13,18 +13,18 @@ Every item below is copied from a record in this archive; the record is named in
 
 - Method: `source-rebuild-python`; base image `ubuntu:24.04`
 - Compiled with `--network=none` from vendored source, dependencies and base images; BuildKit pinned to `moby/buildkit:v0.31.2` (shipped in `toolchain/`).
-- SOURCE_DATE_EPOCH: `1795543294` [`SOURCE_DATE_EPOCH.txt`]
+- SOURCE_DATE_EPOCH: `1795644362` [`SOURCE_DATE_EPOCH.txt`]
 - Frozen inputs: [`docs/provenance/FREEZE_MANIFEST.json`], build recipe: [`docs/provenance/BUILD_RECIPE.json`].
 
 ## Output
 
-- Published image: `readystack/frappecrm:v1.90.0-CE-ubuntu24.04-r6` — index digest `sha256:e18a02e1720013b48ba85f557871d398eb096e542a07ba09a96529bfe165b3a7` [`docs/provenance/LOCKED_DIGEST.txt`]
-- linux/amd64 image digest `sha256:de5a06a514d23e99f0ae97b0d330ffad010b26fb95aa6e91399c438eb6a4d593` — reproduced from this archive before publishing [`docs/provenance/REPRO_VERIFICATION.json`].
+- Published image: `readystack/frappecrm:v1.90.0-CE-ubuntu24.04-r7` — index digest `sha256:8441a9662e57b53ff78e787a41e57340098afa9f0102eaa1120d47b159c60cf3` [`docs/provenance/LOCKED_DIGEST.txt`]
+- linux/amd64 image digest `sha256:ce10c783133ce2cb6e8cb423db57fb8db4677d8b954e3e0e4920bae88dfba5a5` — reproduced from this archive before publishing [`docs/provenance/REPRO_VERIFICATION.json`].
 
 ## Attestations and signature
 
 - SBOM + SLSA provenance attached to the image: attached: an SPDX SBOM and SLSA v1 provenance [`docs/provenance/SCOUT_VERDICT.json`]
-- cosign signature by the ReadyStack release key: verified before publishing. Check it: `cosign verify --key https://readystack.dev/keys/cosign.pub readystack/frappecrm:v1.90.0-CE-ubuntu24.04-r6`
+- cosign signature by the ReadyStack release key: verified before publishing. Check it: `cosign verify --key https://readystack.dev/keys/cosign.pub readystack/frappecrm:v1.90.0-CE-ubuntu24.04-r7`
 
 ## Pinned inputs, and why
 
@@ -32,5 +32,5 @@ Every item below is copied from a record in this archive; the record is named in
 
 ## Build trail
 
-- How this release passed through the ReadyStack harness, record by record (every chain, drive, stage, review round, defect and check, each naming the record it is copied from): `ReadyStack-frappecrm-v1.90.0-CE-ubuntu24.04-r6.trail.json`, published beside this archive and signed with the release key (`ReadyStack-frappecrm-v1.90.0-CE-ubuntu24.04-r6.trail.json.sigstore`), and readable at https://readystack.dev/products/frappecrm/trail/v1.90.0-CE-ubuntu24.04-r6.
+- How this release passed through the ReadyStack harness, record by record (every chain, drive, stage, review round, defect and check, each naming the record it is copied from): `ReadyStack-frappecrm-v1.90.0-CE-ubuntu24.04-r7.trail.json`, published beside this archive and signed with the release key (`ReadyStack-frappecrm-v1.90.0-CE-ubuntu24.04-r7.trail.json.sigstore`), and readable at https://readystack.dev/products/frappecrm/trail/v1.90.0-CE-ubuntu24.04-r7.
 

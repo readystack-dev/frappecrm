@@ -1,7 +1,7 @@
 {
   "schema": "kitforge.build_recipe.v1",
   "slug": "frappecrm",
-  "image": "readystack/frappecrm:v1.90.0-CE-ubuntu24.04-r6",
+  "image": "readystack/frappecrm:v1.90.0-CE-ubuntu24.04-r7",
   "build_method": "source-rebuild-python",
   "source": {
     "repo": "https://github.com/frappe/crm",
@@ -9,8 +9,8 @@
     "framework_repo": "https://github.com/frappe/frappe",
     "framework_branch": "v16.53.0",
     "_source_note": "AGPL-3.0 CRM app on the MIT Frappe framework (version-16). Built via frappe_docker's bench toolchain (bench init frappe + bench get-app crm + bench build). NOT a plain pip build \u2014 the hand-kit forks frappe_docker's production Containerfile.",
-    "source_date_epoch": 1795543294,
-    "source_date_epoch_provenance": "the time release v1.90.0-CE-ubuntu24.04-r6 was cut (2026-11-24T18:01:34Z), by scripts/rerelease-agenda.py: ReadyStack dates an image by when its release was packaged (owner 2026-11-10), recorded here once and used by every rebuild of the release; it builds upstream commit 36bd8859f2a6, dated 2026-10-29T15:58:12Z (source.commit_epoch).",
+    "source_date_epoch": 1795644362,
+    "source_date_epoch_provenance": "the time release v1.90.0-CE-ubuntu24.04-r7 was cut (2026-11-25T22:06:02Z), by scripts/rerelease-agenda.py: ReadyStack dates an image by when its release was packaged (owner 2026-11-10), recorded here once and used by every rebuild of the release; it builds upstream commit 36bd8859f2a6, dated 2026-10-29T15:58:12Z (source.commit_epoch).",
     "commit": "36bd8859f2a6345a620477bc708d0546e8c3f08a",
     "python_version": "3.14",
     "python_runtime": {

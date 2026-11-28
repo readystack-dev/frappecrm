@@ -1,6 +1,6 @@
-image_manifest_digest=sha256:de5a06a514d23e99f0ae97b0d330ffad010b26fb95aa6e91399c438eb6a4d593
-config_digest=sha256:3d6e2267f5aab7c52dd1ebeecbff8604380d8a8d3a05890b99af9ad6c61f8341
-tag=readystack/frappecrm:v1.90.0-CE-ubuntu24.04-r6
+image_manifest_digest=sha256:ce10c783133ce2cb6e8cb423db57fb8db4677d8b954e3e0e4920bae88dfba5a5
+config_digest=sha256:ebbeccda6c89d2cbba67d068324902d5027864f39d2ed7293f19e8ce37d8be42
+tag=readystack/frappecrm:v1.90.0-CE-ubuntu24.04-r7
 probe_port=8080
 probe_path=/api/method/ping
 probe_timeout=300

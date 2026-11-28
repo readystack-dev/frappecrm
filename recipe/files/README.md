@@ -1,14 +1,16 @@
-# Build kit for `readystack/frappecrm:v1.90.0-CE-ubuntu24.04-r6`
+# Build kit for `readystack/frappecrm:v1.90.0-CE-ubuntu24.04-r7`
 
-This archive rebuilds the linux/amd64 image `readystack/frappecrm:v1.90.0-CE-ubuntu24.04-r6` from its own contents, with the network off, and checks the result against the image digest ReadyStack published, `sha256:de5a06a514d23e99f0ae97b0d330ffad010b26fb95aa6e91399c438eb6a4d593` (also in `TARGET_DIGEST.txt`). It holds everything the build needs, not the image itself.
+This archive rebuilds the linux/amd64 image `readystack/frappecrm:v1.90.0-CE-ubuntu24.04-r7` from its own contents, with the network off, and checks the result against the image digest ReadyStack published, `sha256:ce10c783133ce2cb6e8cb423db57fb8db4677d8b954e3e0e4920bae88dfba5a5` (also in `TARGET_DIGEST.txt`). It holds everything the build needs, not the image itself.
+
+Every release of this kit, its recipe and its defect issues are published at https://github.com/readystack-dev/frappecrm; the product page is https://readystack.dev/products/frappecrm.
 
 ## Rebuild it
 
 You need linux/amd64 Docker with `buildx` 0.30 or later, `jq` and `tar` (docs/REBUILD.md lists the rest, if any, and the hardware ReadyStack used).
 
 ```
-tar -xpzf ReadyStack-frappecrm-v1.90.0-CE-ubuntu24.04-r6.tar.gz    # -p keeps each file's mode
-cd v1.90.0-CE-ubuntu24.04-r6
+tar -xpzf ReadyStack-frappecrm-v1.90.0-CE-ubuntu24.04-r7.tar.gz    # -p keeps each file's mode
+cd v1.90.0-CE-ubuntu24.04-r7
 ./BUILD_OFFLINE.sh            # builds with the network off, from this archive alone
 ./VERIFY_OFFLINE.sh           # compares the rebuilt digest with the published one, then checks the image
 ```
@@ -23,8 +25,8 @@ ReadyStack signs this archive's `rebuild.json` with its release key once the fin
 
 ```
 curl -fsSLo ../cosign.pub https://readystack.dev/keys/cosign.pub
-curl -fsSLo ../ReadyStack-frappecrm-v1.90.0-CE-ubuntu24.04-r6.rebuild.json.sigstore https://readystack.dev/api/kit/frappecrm/v1.90.0-CE-ubuntu24.04-r6/files/ReadyStack-frappecrm-v1.90.0-CE-ubuntu24.04-r6.rebuild.json.sigstore
-python3 docs/rebuild-bundle/rebuild_bundle.py validate . --key ../cosign.pub --signature ../ReadyStack-frappecrm-v1.90.0-CE-ubuntu24.04-r6.rebuild.json.sigstore
+curl -fsSLo ../ReadyStack-frappecrm-v1.90.0-CE-ubuntu24.04-r7.rebuild.json.sigstore https://readystack.dev/api/kit/frappecrm/v1.90.0-CE-ubuntu24.04-r7/files/ReadyStack-frappecrm-v1.90.0-CE-ubuntu24.04-r7.rebuild.json.sigstore
+python3 docs/rebuild-bundle/rebuild_bundle.py validate . --key ../cosign.pub --signature ../ReadyStack-frappecrm-v1.90.0-CE-ubuntu24.04-r7.rebuild.json.sigstore
 ```
 
 `validate` needs Python 3 and cosign. Without building anything it checks the signature over `rebuild.json`, every file's checksum, the tree hash over every file's path, mode and content, each base image layout's digest and the builder archive. `verify`, with the same arguments, also rebuilds with the builder's network egress blocked and exits 0 only when the rebuilt digest is the published one (docs/REBUILD.md).
